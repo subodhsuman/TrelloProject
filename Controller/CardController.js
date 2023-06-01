@@ -91,6 +91,17 @@ const EditCard = async (req, res) => {
 
 const deletedCard = async (req, res) => {
   const request = req.body;
+  const rules = {
+    cardId: "required|string",
+    listId: "required|string",
+  };
+
+  let validation = new Validator(request, rules);
+  if (validation.fails()) {
+    let shwErr = await Object.keys(Object.entries(validation.errors)[0][1])[0];
+    return res.json(reply.failed(validation.errors.first(shwErr)));
+  }
+
   try {
     let list = await List.findById(request.listId);
     const card = await Card.findByIdAndDelete(request.cardId);
@@ -115,6 +126,19 @@ const deletedCard = async (req, res) => {
 const moveCard=async(req,res)=>{
    const moveCardId=req.params.id
   const request=req.body;
+
+  const rules = {
+    fromList: "required|string",
+    tolist: "required|string",
+  };
+  let validation = new Validator(request, rules);
+
+  if (validation.fails()) {
+    let shwErr = await Object.keys(Object.entries(validation.errors)[0][1])[0];
+    return res.json(reply.failed(validation.errors.first(shwErr)));
+  }
+
+
   try{
     const frmList=await List.findById(request.fromList)
     console.log(frmList,"frmList");
@@ -128,11 +152,21 @@ const moveCard=async(req,res)=>{
       tolistm = frmList;
     }
 
+    const fromIndex = frmList?.cards.indexOf(moveCardId);
+    if (fromIndex !== -1) {
+        frmList?.cards.splice(fromIndex, 1);
+        await frmList.save();
+    }
 
-
-
-
-
+    if (!tolistm?.cards.includes(moveCardId)) {
+      if (request.toIndex === 0 || request.toIndex) {
+         tolistm?.cards.splice(request.toIndex ,0, moveCardId);
+      } else {
+         tolistm?.cards.push(moveCardId);
+      }
+      await tolistm.save();
+    }
+   return res.json(reply.success("card moved"))
   }catch(err){
     console.log(err);
     return res.json("unable to move")

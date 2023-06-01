@@ -27,6 +27,7 @@ Router.get("/get_list_board/:id",Auth,ListController.getboardlist)
 Router.get("/getlist/:id",Auth,ListController.getListById)
 Router.put("/update_list_name/:id",Auth,ListController.RenameList)
 Router.delete("/delete_list/:id",Auth,ListController.DeleteList)
+Router.put("/move_list", Auth,ListController.MoveList)
 
 /***************************** Card router is here *******************/
 
@@ -34,7 +35,7 @@ Router.post("/add_card",Auth,CardController.AddCard)
 Router.get("/list_card/:listId",Auth,CardController.GetCardlist)
 Router.put("/edit_card/:id",Auth,CardController.EditCard)
 Router.delete("/delete_card",Auth,CardController.deletedCard)
-Router.put("/move",Auth,CardController.moveCard)
+Router.put("/move/:id",Auth,CardController.moveCard)
 
 
 

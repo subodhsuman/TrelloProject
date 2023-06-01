@@ -3,11 +3,10 @@ const Board = require("../models/Board.js");
 const User = require("../models/User.js");
 const reply = require("../common/reply.js");
 const Validator = require("validatorjs");
-const mongoose=require("mongoose")
+// const mongoose = require("mongoose");
 
-
+// Add List
 const AddList = async (req, res) => {
-  // Add List
   const request = req.body;
   const rules = {
     title: "required|string",
@@ -20,7 +19,7 @@ const AddList = async (req, res) => {
   }
 
   try {
-    const board = await Board.findById({ _id:request.boardId });
+    const board = await Board.findById({ _id: request.boardId });
     if (!board) {
       return res.json(reply.failed("Board not found"));
     }
@@ -57,12 +56,11 @@ const getboardlist = async (req, res) => {
   }
 };
 
-
 // Get a list by id
 const getListById = async (req, res) => {
   const id = req.params.id;
   try {
-    const list = await List.findById({ _id:id});
+    const list = await List.findById({ _id: id });
     if (!list) {
       return res.json(reply.failed("List not found"));
     }
@@ -71,9 +69,6 @@ const getListById = async (req, res) => {
     console.log(err);
   }
 };
-
-
-
 
 // Edit a list's title
 const RenameList = async (req, res) => {
@@ -101,30 +96,69 @@ const RenameList = async (req, res) => {
     console.log(err);
   }
 };
-const DeleteList=async (req,res) =>{
-  const id=req.params.id
-  const rquest=req.body
+
+const DeleteList = async (req, res) => {
+  const id = req.params.id;
+  const rquest = req.body;
   // console.log(requset.boardId);
-  try{
-    const list =await List.findByIdAndDelete({_id:id})
-    if(!list){
-     return res.json(reply.failed("List not found"))
+  try {
+    const list = await List.findByIdAndDelete({ _id: id });
+    if (!list) {
+      return res.json(reply.failed("List not found"));
     }
     // list.archived = req.params.archive === 'true';
     // await list.save()
-    const user=await User.findById(req.user._id)
-    var board=await Board.findById({_id:rquest.boardId})
+    // const user=await User.findById(req.user._id)
+    var board = await Board.findById({ _id: rquest.boardId });
     // board.activity.unshift({text: list.archived ? `${user.name} archived list '${list.title}' `: `${user.name} sent list '${list.title}' to the board`,});
-    board.lists = (board?.lists).filter(function(e) {
-       let d = e.toString().replace(/ObjectId\("(.*)"\)/, "$1");
-      return d != id 
-  })
-  
-    await board.save()
-    return res.json(reply.success("List deleted",list))
-  }catch(err){
+    board.lists = (board?.lists).filter(function (e) {
+      let d = e.toString().replace(/ObjectId\("(.*)"\)/, "$1");
+      return d != id;
+    });
+
+    await board.save();
+    return res.json(reply.success("List deleted", list));
+  } catch (err) {
     console.log(err);
   }
-}
+};
 
-module.exports = { AddList, getboardlist, getListById, RenameList,DeleteList};
+const MoveList = async (req, res) => {
+  const requset = req.body;
+  const rules = {
+    boardId: "required|string",
+    listId: "required|string",
+  };
+
+  let validation = new Validator(request, rules);
+  if (validation.fails()) {
+    let shwErr = await Object.keys(Object.entries(validation.errors)[0][1])[0];
+    return res.json(reply.failed(validation.errors.first(shwErr)));
+  }
+
+  try {
+    const toIndex = requset.toIndex ? requset.toIndex : 0;
+    const board = await Board.findById(requset.boardId);
+    const listed = await List.findById(requset.listId);
+    if (!listed) {
+      return res.json(reply.failed("List not found!"));
+    }
+
+    board?.lists.splice(board?.lists.indexOf(listed), 1);
+    board?.lists.splice(toIndex, 0, listed);
+    await board.save();
+    return res.json(reply.success("Move List", board?.lists));
+  } catch (err) {
+    console.log(err);
+    return res.json(reply.failed("unable to moved List!"));
+  }
+};
+
+module.exports = {
+  AddList,
+  getboardlist,
+  getListById,
+  RenameList,
+  DeleteList,
+  MoveList,
+};

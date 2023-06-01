@@ -10,19 +10,7 @@ const Token = require("../models/Token.js");
 
 
 
-// Get authorized user
-const GetAuthUser=async (req,res)=>{
-     try{
-         const user=await User.findById(req.user._id).select('-password')
-         if(!user){
-          return res.json("User does Authenticate")
-         }
-         return res.json(reply.success("Authenticate User Found",user))
-     }catch(err){
-      console.log(err)
-      return res.json(reply.failed("Authenticate User Does not found "))
-     }
-}
+
 
 const RegisterUser = async (req, res) => {
   const request = req.body;
@@ -69,6 +57,7 @@ const Auth = async (req, res) => {
   };
 
   let validation = new Validator(request, rules);
+  
   if (validation.fails()) {
     let shwErr = await Object.keys(Object.entries(validation.errors)[0][1])[0];
     return res.json(reply.failed(validation.errors.first(shwErr)));
@@ -105,5 +94,19 @@ const Auth = async (req, res) => {
     console.log(err);
   }
 };
+
+// Get authorized user
+const GetAuthUser=async (req,res)=>{
+  try{
+      const user=await User.findById(req.user._id).select('-password')
+      if(!user){
+       return res.json("User does Authenticate")
+      }
+      return res.json(reply.success("Authenticate User Found",user))
+  }catch(err){
+   console.log(err)
+   return res.json(reply.failed("Authenticate User Does not found "))
+  }
+}
 
 module.exports = { RegisterUser, Auth,GetAuthUser };
