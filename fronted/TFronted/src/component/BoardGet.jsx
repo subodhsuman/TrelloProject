@@ -9,7 +9,7 @@ function BoardGet() {
   const [title, setTitle] = useState("");
   const [boardList, setBoardList] = useState([]);
   const [cardtile, setCareTitle] = useState({ value: "", listId: "" });
-  const[renameList,setRenameList]=useState({ListedId:"",listName:""})
+  const [renameList, setRenameList] = useState({ ListedId: "", listName: "" });
   // const [cardData, setCardData] = useState([]);
 
   let token = localStorage.getItem("token");
@@ -61,9 +61,35 @@ function BoardGet() {
         console.error(error);
       });
   };
-  const RenameListName=()=>{
-
-  }
+  const UpdateListName = async (e) => {
+    e.preventDefault()
+    const requestBody = {
+      "title": renameList?.listName,
+    };
+    await axios
+      .put(
+        `http://localhost:5003/update_list_name/${renameList.ListedId}`,
+        requestBody,
+        { headers }
+      )
+      .then( async (response) => {
+         if(response?.data?.status_code==1){
+            document.getElementById("closeModal").click();
+            SwalClass.success(response?.data?.message)
+            setRenameList((renameList) => ({
+              ...renameList,
+              listedName:"",
+            }));
+            await new Promise((resolve) => setInterval(resolve, 1000));
+            await getBoardList();
+         }
+        console.log(response.data, "update data is here nowh");
+      })
+      .catch((error) => {
+        // Handle the error
+        console.error(error);
+      });
+  };
 
   const getBoardList = async () => {
     await axios
@@ -75,7 +101,6 @@ function BoardGet() {
       .then(function (response) {
         if (response?.data?.status_code == 1) {
           setBoardList(response?.data?.data);
-
           return SwalClass.success(response?.data?.message);
         }
         if (response?.data?.status_code == 0) {
@@ -123,8 +148,8 @@ function BoardGet() {
     });
     if (response?.data?.status_code == 1) {
       SwalClass.success(response?.data?.message);
-      await new Promise((resolve) => setInterval(resolve, 2000));
-      getBoardList();
+      await new Promise((resolve) => setInterval(resolve, 1000));
+      await getBoardList();
     }
     if (response?.data?.status_code == 0) {
       return SwalClass.error(response?.data?.message);
@@ -135,8 +160,10 @@ function BoardGet() {
     getBoard();
     getBoardList();
   }, []);
-
-console.log({ListedId:renameList.ListedId,listName:renameList.listName},"heelo")
+  console.log(
+    { ListedId: renameList.ListedId, renameList: renameList.listName },
+    "data is here"
+  );
   return (
     <div className="board-get">
       <nav className="navbar rounded-0 mb-3">
@@ -215,7 +242,10 @@ console.log({ListedId:renameList.ListedId,listName:renameList.listName},"heelo")
                     type="button"
                     data-bs-toggle="modal"
                     data-bs-target="#staticBackdrop"
-                    onClick={() => {setRenameList({ListedId:v._id})}}
+                    onClick={() => {
+                      setRenameList({ ...renameList, ListedId: v._id });
+                      // setRenameList({ ListedId: v._id });
+                    }}
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -314,22 +344,31 @@ console.log({ListedId:renameList.ListedId,listName:renameList.listName},"heelo")
                 className="btn-close"
                 data-bs-dismiss="modal"
                 aria-label="Close"
+                id="closeModal"
               ></button>
             </div>
             <div className="modal-body">
-              <form>
+              <form onSubmit={UpdateListName} >
                 <label htmlFor="exampleInputEmail1" className="form-label">
-                   Add List Title
+                  Add List Title
                 </label>
                 <input
                   type="text"
                   className="form-control"
                   id="exampleInputEmail1"
                   aria-describedby="emailHelp"
-                  onChange={(e)=>{setRenameList({listName:e.target.value})}}
-                  value={renameList}
+                  onChange={(e) => {
+                    setRenameList({ ...renameList, listName: e.target.value });
+                  }}
+                  value={renameList.listName}
                   name="renameList"
                 />
+                <button
+                  type="submit"
+                  className="btn btn-primary mt-2"
+                >
+                  List Update
+                </button>
               </form>
             </div>
             <div className="modal-footer">
