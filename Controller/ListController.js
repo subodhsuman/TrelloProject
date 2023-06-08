@@ -46,10 +46,11 @@ const getboardlist = async (req, res) => {
     if (!board) {
       return res.json(reply.failed("Board not found"));
     }
-    const lists = [];
-    for (const listId of board.lists) {
-      lists.push(await List.findById(listId));
-    }
+    const lists=await List.find({}).populate({path:"cards"})
+    // const lists = [];
+    // for (const listId of board.lists) {
+    //   lists.push(await List.findById(listId));
+    // }
     return res.json(reply.success("get all board list", lists));
   } catch (err) {
     console.log(err);
